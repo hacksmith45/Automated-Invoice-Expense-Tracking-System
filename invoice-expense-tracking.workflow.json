@@ -1,0 +1,700 @@
+{
+  "name": "Automated Invoice & Expense Tracking",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 🧾 AUTOMATED INVOICE & EXPENSE TRACKING\n### Gmail ➜ AI Extraction ➜ Duplicate Check ➜ Google Sheets\n\n**Setup:** follow `README.md` · **Edit settings only in** `⚙️ Workflow Config` · **Version:** 1.0.0",
+        "height": 300,
+        "width": 1500,
+        "color": 7
+      },
+      "id": "9f5e7a4d-da3d-5c4b-85f9-4cba284e6f1d",
+      "name": "Sticky Title",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -330
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 1️⃣ CAPTURE\n## Gmail ➜ Config ➜ Filter\nWatches the inbox, loads settings, and keeps **only valid PDF / image attachments** (size + type checked).",
+        "height": 760,
+        "width": 1010,
+        "color": 4
+      },
+      "id": "b29c3833-7bea-5272-8e42-5de8bd285b5d",
+      "name": "Sticky A",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 2️⃣ AI EXTRACTION\n## Request ➜ OpenAI ➜ Parse\nSends each file to AI, receives **strict structured JSON**, then cleans, validates and builds the duplicate key.",
+        "height": 760,
+        "width": 1180,
+        "color": 6
+      },
+      "id": "ef6e9c1f-7cc5-5bf8-a5ad-de98bde22d1c",
+      "name": "Sticky B",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        850,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 3️⃣ VALIDATE & DEDUPLICATE\n## Check ➜ Compare ➜ Route\nInvalid / low-confidence documents go to **Needs Review**. Valid ones are compared with existing sheet records.",
+        "height": 1060,
+        "width": 1260,
+        "color": 5
+      },
+      "id": "d3d0aaa4-6192-5aec-bebc-9c926db3e22f",
+      "name": "Sticky C",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2050,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 4️⃣ RECORD\n## Save or Skip\n**New** invoices are saved to *Expenses*.\n**Duplicates** are skipped and logged.",
+        "height": 760,
+        "width": 640,
+        "color": 3
+      },
+      "id": "b02f152d-9bb6-54cc-a697-0d83b164aefd",
+      "name": "Sticky D",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3340,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "has:attachment (invoice OR receipt OR bill OR \"payment confirmation\" OR statement) -in:sent -in:trash -in:spam",
+          "readStatus": "both"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "id": "c1ba3f2f-91cc-5fab-83e7-243402a991c3",
+      "name": "📧 Gmail Invoice Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "notes": "Polls Gmail every minute for emails with attachments",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c8f091a3-096f-5151-8af2-0f18e76c2020",
+              "name": "spreadsheetId",
+              "value": "PASTE_YOUR_GOOGLE_SHEET_ID_HERE",
+              "type": "string"
+            },
+            {
+              "id": "273f9835-92aa-5f5c-a860-56a3a4f25773",
+              "name": "expensesSheetName",
+              "value": "Expenses",
+              "type": "string"
+            },
+            {
+              "id": "fcdc78f2-ceb1-5098-918f-62669a5355c0",
+              "name": "reviewSheetName",
+              "value": "Needs Review",
+              "type": "string"
+            },
+            {
+              "id": "4af569e4-cfe0-5f42-a621-b646214ee341",
+              "name": "duplicatesSheetName",
+              "value": "Duplicates Log",
+              "type": "string"
+            },
+            {
+              "id": "3f5a7998-89da-5b5e-874c-d6e23e7d1b90",
+              "name": "aiModel",
+              "value": "gpt-4o-mini",
+              "type": "string"
+            },
+            {
+              "id": "45a0c1b3-69a0-5723-9e3a-d7766861559e",
+              "name": "defaultCurrency",
+              "value": "USD",
+              "type": "string"
+            },
+            {
+              "id": "8e2df66b-16f3-5de1-970e-b2d2d66d8f66",
+              "name": "minConfidence",
+              "value": 0.6,
+              "type": "number"
+            },
+            {
+              "id": "7d2cb7c5-b0e3-5dda-8314-2f20040a5b5e",
+              "name": "maxFileSizeMB",
+              "value": 15,
+              "type": "number"
+            },
+            {
+              "id": "ef02265f-593d-547f-8a56-3bded266167a",
+              "name": "allowedMimeTypes",
+              "value": "application/pdf,image/png,image/jpeg,image/webp",
+              "type": "string"
+            },
+            {
+              "id": "c7e8411f-90fc-5c79-9cf7-2b163be2c3d6",
+              "name": "expenseCategories",
+              "value": "Software & Subscriptions,Office Supplies,Travel,Meals & Entertainment,Utilities,Professional Services,Marketing & Advertising,Rent & Facilities,Equipment & Hardware,Insurance,Taxes & Fees,Other",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "includeBinary": true,
+          "stripBinary": false
+        }
+      },
+      "id": "9916c5b9-ec6d-557b-99a1-d42338f147e5",
+      "name": "⚙️ Workflow Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        340,
+        300
+      ],
+      "notes": "ALL client settings live here",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Splits every email into ONE item per valid attachment (PDF / image).\nconst out = [];\nconst items = $input.all();\nconst MIN_IMAGE_BYTES = 8 * 1024; // ignore tiny inline images (logos, signatures)\nconst extToMime = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };\n\nconst pick = (...vals) => vals.find(v => v !== undefined && v !== null && v !== '');\nconst textOf = (v) => {\n  if (!v) return '';\n  if (typeof v === 'string') return v;\n  if (v.text) return v.text;\n  if (Array.isArray(v.value)) {\n    return v.value.map(x => x.address ? (x.name ? `${x.name} <${x.address}>` : x.address) : '').join(', ');\n  }\n  return '';\n};\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const j = item.json;\n  const allowed = String(j.allowedMimeTypes || 'application/pdf,image/png,image/jpeg,image/webp')\n    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);\n  const maxBytes = (Number(j.maxFileSizeMB) || 15) * 1024 * 1024;\n\n  const messageId = String(pick(j.id, j.messageId, ''));\n  const from = textOf(pick(j.from, j.From, j.headers && j.headers.from));\n  const subject = String(pick(j.subject, j.Subject, j.headers && j.headers.subject, '(no subject)'));\n  const emailDate = String(pick(j.date, j.Date, j.internalDate ? new Date(Number(j.internalDate)).toISOString() : '', ''));\n  const emailLink = messageId ? `https://mail.google.com/mail/u/0/#all/${messageId}` : '';\n\n  const binaries = item.binary || {};\n  for (const key of Object.keys(binaries)) {\n    const bin = binaries[key];\n    const fileName = bin.fileName || key;\n    const ext = (fileName.split('.').pop() || '').toLowerCase();\n    let mime = String(bin.mimeType || '').toLowerCase();\n    if ((!mime || mime === 'application/octet-stream') && extToMime[ext]) mime = extToMime[ext];\n    if (!allowed.includes(mime)) continue;\n\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    if (buf.length > maxBytes) continue;\n    if (mime.startsWith('image/') && buf.length < MIN_IMAGE_BYTES) continue;\n\n    out.push({\n      json: { messageId, from, subject, emailDate, emailLink, fileName, mimeType: mime, fileSizeKB: Math.round(buf.length / 1024) },\n      binary: { data: { ...bin, mimeType: mime } },\n      pairedItem: { item: i },\n    });\n  }\n}\nreturn out;\n"
+      },
+      "id": "b0a7690f-1af2-508c-978a-3c49855e4336",
+      "name": "📎 Filter Attachments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "notes": "Keeps valid PDF/image files only",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Builds the OpenAI request (PDF/image sent as base64, strict JSON schema response).\nconst cfg = $('⚙️ Workflow Config').first().json;\nconst model = cfg.aiModel || 'gpt-4o-mini';\nconst categories = String(cfg.expenseCategories || 'Other').split(',').map(s => s.trim()).filter(Boolean);\nconst defaultCurrency = String(cfg.defaultCurrency || 'USD').toUpperCase();\n\nconst nullableString = { type: ['string', 'null'] };\nconst nullableNumber = { type: ['number', 'null'] };\n\nconst schema = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['is_invoice_or_receipt', 'document_type', 'vendor_name', 'invoice_number', 'invoice_date', 'due_date',\n             'currency', 'subtotal', 'tax_amount', 'total_amount', 'category', 'description', 'line_items', 'confidence', 'notes'],\n  properties: {\n    is_invoice_or_receipt: { type: 'boolean' },\n    document_type: { type: 'string', enum: ['invoice', 'receipt', 'bill', 'credit_note', 'statement', 'other'] },\n    vendor_name: nullableString,\n    invoice_number: nullableString,\n    invoice_date: nullableString,\n    due_date: nullableString,\n    currency: nullableString,\n    subtotal: nullableNumber,\n    tax_amount: nullableNumber,\n    total_amount: nullableNumber,\n    category: { type: 'string', enum: categories },\n    description: nullableString,\n    line_items: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['description', 'quantity', 'unit_price', 'amount'],\n        properties: {\n          description: { type: 'string' },\n          quantity: nullableNumber,\n          unit_price: nullableNumber,\n          amount: nullableNumber,\n        },\n      },\n    },\n    confidence: { type: 'number' },\n    notes: nullableString,\n  },\n};\n\nconst systemPrompt = [\n  'You are an expert accounts-payable assistant. Extract structured financial data from the supplied invoice, receipt or bill.',\n  'Rules:',\n  '- Never guess. If a value is not clearly present, return null.',\n  '- vendor_name is the company that ISSUED the document (the seller/supplier), never the customer being billed.',\n  '- Dates must be ISO format YYYY-MM-DD.',\n  '- Amounts are plain numbers: no currency symbols, no thousands separators, use a dot as decimal separator.',\n  '- total_amount is the final amount payable or paid, including tax.',\n  `- currency is the 3-letter ISO code. If only a symbol is shown and it is ambiguous, use ${defaultCurrency}.`,\n  `- category must be exactly one of: ${categories.join(', ')}.`,\n  '- If the document is NOT an invoice, receipt or bill (newsletter, contract, marketing, etc.) set is_invoice_or_receipt to false.',\n  '- confidence is 0 to 1 and reflects legibility and completeness of the extracted data.',\n  '- description is a short one-line summary of what was purchased.',\n].join('\\n');\n\nconst items = $input.all();\nconst out = [];\nfor (let i = 0; i < items.length; i++) {\n  const j = items[i].json;\n  const buf = await this.helpers.getBinaryDataBuffer(i, 'data');\n  const b64 = buf.toString('base64');\n\n  const filePart = j.mimeType === 'application/pdf'\n    ? { type: 'file', file: { filename: j.fileName || 'invoice.pdf', file_data: `data:application/pdf;base64,${b64}` } }\n    : { type: 'image_url', image_url: { url: `data:${j.mimeType};base64,${b64}`, detail: 'high' } };\n\n  out.push({\n    json: {\n      meta: {\n        messageId: j.messageId, from: j.from, subject: j.subject, emailDate: j.emailDate,\n        emailLink: j.emailLink, fileName: j.fileName, mimeType: j.mimeType,\n      },\n      requestBody: {\n        model,\n        temperature: 0,\n        messages: [\n          { role: 'system', content: systemPrompt },\n          { role: 'user', content: [{ type: 'text', text: 'Extract the financial data from this document.' }, filePart] },\n        ],\n        response_format: { type: 'json_schema', json_schema: { name: 'invoice_extraction', strict: true, schema } },\n      },\n    },\n    pairedItem: { item: i },\n  });\n}\nreturn out;\n"
+      },
+      "id": "edb1c49c-859f-5260-a484-9dbc9236d6b1",
+      "name": "🧱 Build AI Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        300
+      ],
+      "notes": "Prepares the AI request + JSON schema",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.requestBody) }}",
+        "options": {
+          "timeout": 180000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          }
+        }
+      },
+      "id": "d9df8d49-a17a-54b7-8af3-e8b868b9ec28",
+      "name": "🤖 AI Invoice Extraction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        300
+      ],
+      "notes": "OpenAI reads the PDF / image",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Parses the AI response, normalises values, validates, and builds the duplicate key.\nconst cfg = $('⚙️ Workflow Config').first().json;\nconst defaultCurrency = String(cfg.defaultCurrency || 'USD').toUpperCase();\nconst minConfidence = Number(cfg.minConfidence ?? 0.6);\nconst responses = $input.all();\nconst requests = $('🧱 Build AI Request').all();\nconst out = [];\n\nconst clean = (v) => (v === null || v === undefined) ? '' : String(v).replace(/\\s+/g, ' ').trim();\nconst num = (v) => {\n  if (v === null || v === undefined || v === '') return null;\n  const n = typeof v === 'number' ? v : Number(String(v).replace(/[^0-9.\\-]/g, ''));\n  return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;\n};\nconst isoDate = (v) => {\n  const s = clean(v);\n  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return '';\n  const d = new Date(s + 'T00:00:00Z');\n  return (!isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s) ? s : '';\n};\nconst slug = (v) => clean(v).toLowerCase().replace(/[^a-z0-9]/g, '');\n\nfor (let i = 0; i < responses.length; i++) {\n  const resp = responses[i].json || {};\n  const meta = (requests[i] && requests[i].json.meta) || {};\n  let data = {};\n  let aiError = '';\n\n  try {\n    if (resp.error) throw new Error(typeof resp.error === 'string' ? resp.error : (resp.error.message || JSON.stringify(resp.error)));\n    const msg = resp.choices && resp.choices[0] && resp.choices[0].message;\n    if (msg && msg.refusal) throw new Error('AI refused: ' + msg.refusal);\n    if (!msg || !msg.content) throw new Error('Empty AI response');\n    data = JSON.parse(msg.content);\n  } catch (e) {\n    aiError = e.message || String(e);\n  }\n\n  const vendor = clean(data.vendor_name);\n  const invoiceNumber = clean(data.invoice_number);\n  const invoiceDate = isoDate(data.invoice_date);\n  const dueDate = isoDate(data.due_date);\n  const cur = clean(data.currency).toUpperCase();\n  const currency = /^[A-Z]{3}$/.test(cur) ? cur : defaultCurrency;\n  let subtotal = num(data.subtotal);\n  const tax = num(data.tax_amount);\n  let total = num(data.total_amount);\n  if (total === null && subtotal !== null && tax !== null) total = Math.round((subtotal + tax) * 100) / 100;\n  const confidence = Math.max(0, Math.min(1, Number(data.confidence) || 0));\n  const category = clean(data.category) || 'Other';\n\n  const lineItems = (Array.isArray(data.line_items) ? data.line_items : [])\n    .map(li => `${clean(li.description)}${li.amount !== null && li.amount !== undefined ? ' — ' + li.amount : ''}`)\n    .join(' | ').slice(0, 2000);\n\n  // ---- validation ----\n  const issues = [];\n  if (aiError) issues.push('AI extraction failed: ' + aiError);\n  else {\n    if (data.is_invoice_or_receipt === false) issues.push('Document is not an invoice/receipt');\n    if (!vendor) issues.push('Vendor name missing');\n    if (total === null) issues.push('Total amount missing');\n    else if (total <= 0) issues.push('Total is zero or negative (credit note?)');\n    if (confidence < minConfidence) issues.push(`Low AI confidence (${confidence})`);\n  }\n\n  // ---- duplicate key ----\n  const amountKey = total === null ? '0.00' : total.toFixed(2);\n  const duplicateKey = invoiceNumber\n    ? [slug(vendor), slug(invoiceNumber), amountKey, currency.toLowerCase()].join('|')\n    : [slug(vendor), invoiceDate || 'nodate', amountKey, currency.toLowerCase()].join('|');\n\n  out.push({\n    json: {\n      isValid: issues.length === 0,\n      reviewReason: issues.join('; '),\n      processedAt: new Date().toISOString(),\n      vendor, invoiceNumber, invoiceDate, dueDate, currency,\n      subtotal: subtotal === null ? '' : subtotal,\n      tax: tax === null ? '' : tax,\n      total: total === null ? '' : total,\n      category,\n      description: clean(data.description),\n      lineItems,\n      confidence,\n      emailFrom: meta.from || '',\n      emailSubject: meta.subject || '',\n      emailDate: meta.emailDate || '',\n      fileName: meta.fileName || '',\n      emailLink: meta.emailLink || '',\n      duplicateKey,\n      rawAi: aiError ? ('ERROR: ' + aiError) : JSON.stringify(data).slice(0, 4000),\n    },\n    pairedItem: { item: i },\n  });\n}\nreturn out;\n"
+      },
+      "id": "45659278-4858-5fa5-a2bc-34c72ee79b4f",
+      "name": "🔍 Parse & Validate Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        300
+      ],
+      "notes": "Cleans data, validates, builds duplicate key",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5eee389e-7824-5958-b3aa-6904f6850692",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5de0808b-b6a1-56a3-9491-5a8a808c4889",
+      "name": "✅ Valid Invoice?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2120,
+        300
+      ],
+      "notes": "TRUE = clean invoice · FALSE = needs review",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('⚙️ Workflow Config').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('⚙️ Workflow Config').first().json.expensesSheetName }}",
+          "mode": "name"
+        },
+        "filtersUI": {},
+        "options": {}
+      },
+      "id": "596fe4fd-3e8b-541b-a296-9fd5f63d45fb",
+      "name": "📚 Get Existing Expenses",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2460,
+        300
+      ],
+      "notes": "Reads existing records (runs once)",
+      "notesInFlow": true,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Compares every new invoice against the keys already stored in the Expenses sheet.\nconst clean = (v) => (v === null || v === undefined) ? '' : String(v).trim().toLowerCase();\n\nconst existing = new Set(\n  $input.all().map(i => clean(i.json['Duplicate Key'])).filter(Boolean)\n);\n\nconst incoming = $('✅ Valid Invoice?').all(0);\nconst seenInThisRun = new Set();\nconst out = [];\n\nincoming.forEach((it, idx) => {\n  const key = clean(it.json.duplicateKey);\n  let isDuplicate = false;\n  let duplicateReason = '';\n  if (existing.has(key)) {\n    isDuplicate = true;\n    duplicateReason = 'Already exists in Expenses sheet';\n  } else if (seenInThisRun.has(key)) {\n    isDuplicate = true;\n    duplicateReason = 'Duplicate within the same batch';\n  }\n  seenInThisRun.add(key);\n  out.push({ json: { ...it.json, isDuplicate, duplicateReason }, pairedItem: { item: idx } });\n});\n\nreturn out;\n"
+      },
+      "id": "d7767e35-926e-5997-89b5-4020fb8be264",
+      "name": "🧮 Detect Duplicates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        300
+      ],
+      "notes": "Flags duplicates (sheet + same batch)",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "29ea868a-9972-56e5-8150-deab1c252a3c",
+              "leftValue": "={{ $json.isDuplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "750f7d95-c9ed-529d-adf0-4f75c612ef22",
+      "name": "🔁 Is Duplicate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3140,
+        300
+      ],
+      "notes": "TRUE = duplicate · FALSE = new record",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('⚙️ Workflow Config').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('⚙️ Workflow Config').first().json.expensesSheetName }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Processed At": "={{ $json.processedAt }}",
+            "Invoice Number": "={{ $json.invoiceNumber }}",
+            "Vendor": "={{ $json.vendor }}",
+            "Invoice Date": "={{ $json.invoiceDate }}",
+            "Due Date": "={{ $json.dueDate }}",
+            "Currency": "={{ $json.currency }}",
+            "Subtotal": "={{ $json.subtotal }}",
+            "Tax": "={{ $json.tax }}",
+            "Total": "={{ $json.total }}",
+            "Category": "={{ $json.category }}",
+            "Description": "={{ $json.description }}",
+            "Line Items": "={{ $json.lineItems }}",
+            "Email From": "={{ $json.emailFrom }}",
+            "Email Subject": "={{ $json.emailSubject }}",
+            "Email Date": "={{ $json.emailDate }}",
+            "File Name": "={{ $json.fileName }}",
+            "Confidence": "={{ $json.confidence }}",
+            "Email Link": "={{ $json.emailLink }}",
+            "Duplicate Key": "={{ $json.duplicateKey }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ca131394-fa6c-5693-bf1c-fc67962d54b3",
+      "name": "💾 Save to Expenses Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3560,
+        300
+      ],
+      "notes": "New verified record ➜ Expenses",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('⚙️ Workflow Config').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('⚙️ Workflow Config').first().json.duplicatesSheetName }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Processed At": "={{ $json.processedAt }}",
+            "Vendor": "={{ $json.vendor }}",
+            "Invoice Number": "={{ $json.invoiceNumber }}",
+            "Invoice Date": "={{ $json.invoiceDate }}",
+            "Currency": "={{ $json.currency }}",
+            "Total": "={{ $json.total }}",
+            "Duplicate Key": "={{ $json.duplicateKey }}",
+            "Reason": "={{ $json.duplicateReason }}",
+            "Email From": "={{ $json.emailFrom }}",
+            "Email Subject": "={{ $json.emailSubject }}",
+            "File Name": "={{ $json.fileName }}",
+            "Email Link": "={{ $json.emailLink }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d9202af2-91b7-5c5b-820b-39c89c0a22e4",
+      "name": "🚫 Log Skipped Duplicate",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3560,
+        640
+      ],
+      "notes": "Duplicate skipped ➜ audit log",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('⚙️ Workflow Config').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('⚙️ Workflow Config').first().json.reviewSheetName }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Processed At": "={{ $json.processedAt }}",
+            "Review Reason": "={{ $json.reviewReason }}",
+            "Vendor": "={{ $json.vendor }}",
+            "Invoice Number": "={{ $json.invoiceNumber }}",
+            "Invoice Date": "={{ $json.invoiceDate }}",
+            "Currency": "={{ $json.currency }}",
+            "Total": "={{ $json.total }}",
+            "Confidence": "={{ $json.confidence }}",
+            "Email From": "={{ $json.emailFrom }}",
+            "Email Subject": "={{ $json.emailSubject }}",
+            "File Name": "={{ $json.fileName }}",
+            "Email Link": "={{ $json.emailLink }}",
+            "Raw AI Data": "={{ $json.rawAi }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "8fffebb2-10bc-5240-8a74-292261a447d1",
+      "name": "⚠️ Save to Needs Review",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2460,
+        820
+      ],
+      "notes": "Invalid / low confidence ➜ manual check",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    }
+  ],
+  "connections": {
+    "📧 Gmail Invoice Trigger": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Workflow Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Workflow Config": {
+      "main": [
+        [
+          {
+            "node": "📎 Filter Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Filter Attachments": {
+      "main": [
+        [
+          {
+            "node": "🧱 Build AI Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧱 Build AI Request": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI Invoice Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI Invoice Extraction": {
+      "main": [
+        [
+          {
+            "node": "🔍 Parse & Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Parse & Validate Data": {
+      "main": [
+        [
+          {
+            "node": "✅ Valid Invoice?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Valid Invoice?": {
+      "main": [
+        [
+          {
+            "node": "📚 Get Existing Expenses",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⚠️ Save to Needs Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📚 Get Existing Expenses": {
+      "main": [
+        [
+          {
+            "node": "🧮 Detect Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧮 Detect Duplicates": {
+      "main": [
+        [
+          {
+            "node": "🔁 Is Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔁 Is Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "🚫 Log Skipped Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "💾 Save to Expenses Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "timezone": "UTC"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
